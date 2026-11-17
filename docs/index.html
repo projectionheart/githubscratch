@@ -3,8 +3,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0a">
-<title>githubscratch · daily journal</title>
-<meta name="description" content="A public journal on GitHub. One prompt a day; reply with a post, an image or a file.">
+<title>githubscratch · fragments</title>
+<meta name="description" content="Collecting fragments on GitHub, one a day, and stitching them into things.">
 <style>
 :root {
   --ink: #0b0b0b; --paper: #ecebe6; --chrome: #cfcfcb; --line: #8d8d88;
@@ -45,6 +45,8 @@ h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; 
   padding: 9px 0; border-bottom: 1px solid #1d1d1d; }
 .types b { font-weight: 400; font-size: 17px; letter-spacing: .3px; }
 .types span { grid-column: 1; font-size: 13px; color: var(--dim); letter-spacing: .3px; }
+.types li.build b { font-family: var(--mono); color: #fff; }
+.types li.build { border-top: 1px solid #3a3a3a; }
 .types svg { grid-column: 2; grid-row: 1 / span 2; width: 40px; height: 16px; }
 
 .switch { margin-top: 18px; display: inline-grid; background: var(--paper); color: var(--ink); border: 1px solid var(--line); font-size: 14px; letter-spacing: 1px; }
@@ -87,17 +89,17 @@ h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; 
 <div class="bg"><img src="assets/bg.jpg" alt="" fetchpriority="high"></div>
 
 <div class="stage">
-  <main class="win" aria-label="The daily journal prompt">
-    <div class="tag">githubscratch / daily.</div>
+  <main class="win" aria-label="The daily fragment prompt">
+    <div class="tag">githubscratch / fragments.</div>
     <div class="chrome" aria-hidden="true"><span>◂ ▸ ▪</span><span>_ ▢ ✕</span></div>
     <div class="panel">
-      <h1><span class="a">Daily</span><span class="b">journal</span></h1>
-      <p class="paren">(prompt · 8:42 am et)</p>
+      <h1><span class="a">Daily</span><span class="b">fragments</span></h1>
+      <p class="paren">(collecting · 8:42 am et)</p>
 
       <div class="lines">
-        <p>Got something to post today?</p>
-        <p>Reply with text, images or files.</p>
-        <p>Or ignore this.</p>
+        <p>Collect a fragment today.</p>
+        <p>A line, a screenshot, a file, a clip.</p>
+        <p>Or let it pass.</p>
       </div>
 
       <ul class="types">
@@ -109,10 +111,11 @@ h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; 
         <li><b>Opinionated list</b><span>ranked tools, tricks or picks</span><svg viewBox="0 0 40 16"><use href="#wave"/></svg></li>
         <li><b>Open question</b><span>something you haven't solved yet</span><svg viewBox="0 0 40 16"><use href="#wave"/></svg></li>
         <li><b>Weekly changelog</b><span>built, learned, dropped · fridays</span><svg viewBox="0 0 40 16"><use href="#wave"/></svg></li>
+        <li class="build"><b>stitch:</b><span>send a prompt, screenshot or video · it's stitched with recent fragments into three things to ship in an hour</span><svg viewBox="0 0 40 16"><use href="#wave"/></svg></li>
       </ul>
 
       <nav class="switch">
-        <a href="https://github.com/ProjectionHeart/githubscratch/tree/main/ideas">Read the journal <span>→</span></a>
+        <a href="https://github.com/ProjectionHeart/githubscratch/tree/main/fragments">Read the stitch <span>→</span></a>
         <a href="https://github.com/ProjectionHeart/githubscratch">Repo / open <span class="pill" aria-hidden="true"></span></a>
       </nav>
     </div>
