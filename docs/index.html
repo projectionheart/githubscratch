@@ -38,12 +38,12 @@ h1 { margin: 0; font-family: var(--serif); font-weight: 400; line-height: .9; }
 h1 .a { display: block; font-size: 64px; letter-spacing: 1px; }
 h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; padding-right: 12px; margin-top: -4px; }
 .paren { margin: 18px 0 20px; font-size: 20px; color: var(--paper); }
-.lines p { margin: 0 0 18px; font-size: 22px; line-height: 1.2; text-transform: uppercase; letter-spacing: .3px; }
+.lines p { margin: 0 0 18px; font-size: 22px; line-height: 1.2; letter-spacing: .3px; }
 
 .types { list-style: none; margin: 26px 0 0; padding: 0; border-top: 1px solid #262626; }
 .types li { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px;
   padding: 9px 0; border-bottom: 1px solid #1d1d1d; }
-.types b { font-weight: 400; font-size: 17px; letter-spacing: 2px; text-transform: uppercase; }
+.types b { font-weight: 400; font-size: 17px; letter-spacing: .3px; }
 .types span { grid-column: 1; font-size: 13px; color: var(--dim); letter-spacing: .3px; }
 .types svg { grid-column: 2; grid-row: 1 / span 2; width: 40px; height: 16px; }
 
@@ -54,31 +54,16 @@ h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; 
 .pill { width: 34px; height: 18px; border-radius: 9px; background: var(--ink); position: relative; }
 .pill::after { content: ""; position: absolute; right: 3px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); }
 
-/* ---- light label boxes, like the artwork's top-right captions */
-.notes { position: absolute; right: max(18px, 3vw); top: 26vh; width: min(430px, 36vw); display: grid; gap: 14px; }
-.cap { background: var(--paper); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(0,0,0,.45); }
-.cap .chrome { height: 18px; font-size: 10px; }
-.cap .body { padding: 10px 14px; font-size: 16px; line-height: 1.35; }
-.cap u { text-decoration-thickness: 1px; text-underline-offset: 3px; }
-.cap .att { display: flex; gap: 10px; margin-top: 10px; align-items: stretch; }
-.thumb { width: 96px; aspect-ratio: 4 / 3; background: var(--ink); border: 1px solid var(--line); display: block; image-rendering: pixelated; }
-.chip { flex: 1; border: 1px solid var(--line); padding: 6px 8px; font-family: var(--mono); font-size: 12px; display: grid; align-content: center; gap: 2px; }
-.chip i { font-style: normal; color: #666; }
-.commit { font-family: var(--mono); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
-.commit b { font-family: var(--sans); font-weight: 400; letter-spacing: 1px; display: block; margin-bottom: 4px; font-size: 14px; }
-.commit b::before { content: "■ "; color: var(--blue); }
 
 /* ---- phones: art across the top, window and captions stacked below */
 @media (max-width: 820px) {
-  .bg { height: 46vh; bottom: auto; }
-  .bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 55%, var(--ink)); }
-  .bg img { object-position: 88% 40%; }
-  .stage { padding-top: 34vh; }
+  .bg { position: relative; inset: auto; }
+  .bg img { height: auto; object-fit: initial; }
+  .stage { min-height: 0; padding-top: 18px; }
   .win { width: 100%; margin: 0; }
   .tag { font-size: 16px; }
   h1 .a, h1 .b { font-size: 52px; }
   .lines p { font-size: 19px; }
-  .notes { position: static; width: 100%; margin-top: 22px; }
 }
 /* ---- desktop: lock the art to the top-left and lay the windows exactly over the
    artwork's own panel (x165–505 of 1320) and caption box (x832–1282, y183) */
@@ -92,8 +77,6 @@ h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; 
   .panel { min-height: calc(655 * var(--s)); padding: calc(22 * var(--s)) calc(20 * var(--s)); }
   h1 .a, h1 .b { font-size: calc(54 * var(--s)); }
   .lines p { font-size: calc(18 * var(--s)); }
-  .notes { left: calc(826 * var(--s)); right: auto; top: calc(176 * var(--s));
-    width: min(calc(462 * var(--s)), calc(100vw - 826 * var(--s) - 16px)); }
 }
 @media (min-width: 821px) and (max-height: 760px) {
   .types li { padding: 6px 0; } .types span { display: none; }
@@ -105,10 +88,10 @@ h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; 
 
 <div class="stage">
   <main class="win" aria-label="The daily journal prompt">
-    <div class="tag">GITHUBSCRATCH / DAILY.</div>
+    <div class="tag">githubscratch / daily.</div>
     <div class="chrome" aria-hidden="true"><span>◂ ▸ ▪</span><span>_ ▢ ✕</span></div>
     <div class="panel">
-      <h1><span class="a">DAILY</span><span class="b">journal</span></h1>
+      <h1><span class="a">Daily</span><span class="b">journal</span></h1>
       <p class="paren">(prompt · 8:42 am et)</p>
 
       <div class="lines">
@@ -129,38 +112,12 @@ h1 .b { display: block; font-size: 64px; font-style: italic; text-align: right; 
       </ul>
 
       <nav class="switch">
-        <a href="https://github.com/ProjectionHeart/githubscratch/tree/main/ideas">READ THE JOURNAL <span>→</span></a>
-        <a href="https://github.com/ProjectionHeart/githubscratch">REPO / OPEN <span class="pill" aria-hidden="true"></span></a>
+        <a href="https://github.com/ProjectionHeart/githubscratch/tree/main/ideas">Read the journal <span>→</span></a>
+        <a href="https://github.com/ProjectionHeart/githubscratch">Repo / open <span class="pill" aria-hidden="true"></span></a>
       </nav>
     </div>
   </main>
 
-  <aside class="notes" aria-label="Example reply">
-    <div class="cap">
-      <div class="chrome" aria-hidden="true"><span>REPLY</span><span>8:57</span></div>
-      <div class="body">
-        BEFORE / <u>AFTER</u> + Bayer keeps the edges crisp.
-        <div class="att">
-          <svg class="thumb" viewBox="0 0 16 12" aria-label="Attached image">
-            <rect width="16" height="12" fill="#0b0b0b"/>
-            <g fill="#ecebe6"><rect x="1" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="1" y="5" width="6" height="5"/>
-            <rect x="10" y="2" width="1" height="1"/><rect x="13" y="1" width="1" height="1"/><rect x="11" y="4" width="1" height="1"/><rect x="9" y="6" width="3" height="4"/><rect x="12" y="7" width="3" height="3"/></g>
-            <rect x="7.6" y="1" width=".8" height="10" fill="#2f3cff"/>
-          </svg>
-          <div class="chip"><span>compare.png</span><span>dither.js</span><i>2 attachments</i></div>
-        </div>
-      </div>
-    </div>
-    <div class="cap">
-      <div class="chrome" aria-hidden="true"><span>MAIN</span><span>_ ▢ ✕</span></div>
-      <div class="body commit">
-        <b>COMMITTED</b>
-        ideas/2026-11-17-bayer-vs-floyd.md<br>
-        ideas/assets/2026-11-17-bayer-vs-floyd/compare.png<br>
-        ideas/assets/2026-11-17-bayer-vs-floyd/dither.js
-      </div>
-    </div>
-  </aside>
 </div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
