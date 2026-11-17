@@ -6,7 +6,7 @@ A public journal on GitHub. Each commit is a small post that should be useful on
 
 ## How it works
 
-Every morning a Claude scheduled task sends a prompt asking if there's anything to post today. Reply with the post and it gets committed to `ideas/` as `YYYY-MM-DD-<slug>.md`. Ignore the prompt and nothing happens.
+Every morning a prompt asks if there's anything to post today. Reply with text, images or files and it gets committed to `ideas/` as `YYYY-MM-DD-<slug>.md`. Attachments are saved in `ideas/assets/YYYY-MM-DD-<slug>/` and linked from the post (images show inline). Ignore the prompt and nothing happens.
 
 ## What to post
 
