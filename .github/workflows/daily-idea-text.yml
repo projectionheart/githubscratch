@@ -1,0 +1,32 @@
+name: Daily idea text
+
+on:
+  schedule:
+    # 14:00 UTC = 9:00 AM Eastern (standard time) / 10:00 AM during daylight time
+    - cron: "0 14 * * *"
+  workflow_dispatch: {}   # lets you send a test text from the Actions tab
+
+jobs:
+  text:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send SMS via Twilio
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
+          MY_PHONE: ${{ secrets.MY_PHONE }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.repository.default_branch || 'main' }}
+        run: |
+          set -euo pipefail
+          DATE=$(TZ=America/New_York date +%Y-%m-%d)
+          LINK="https://github.com/${REPO}/new/${BRANCH}?filename=ideas/${DATE}-idea.md"
+          BODY="Got an idea worth committing to githubscratch today? Tap to write it and hit Commit: ${LINK}"
+          curl -sS --fail-with-body -X POST \
+            "https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json" \
+            -u "${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}" \
+            --data-urlencode "From=${TWILIO_FROM}" \
+            --data-urlencode "To=${MY_PHONE}" \
+            --data-urlencode "Body=${BODY}" > /dev/null
+          echo "Text sent for ${DATE}"
