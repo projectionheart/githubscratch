@@ -1,3 +1,3 @@
-# Ideas
+# Posts
 
-One file per idea, named `YYYY-MM-DD-idea.md`. The daily text links straight to a new file here.
+Journal entries, one file per post, named `YYYY-MM-DD-<slug>.md`. Each starts with a `# ` title and an optional `Type:` line (TIL, Tiny demo, Prompt that worked, Teardown, Before/after, Opinionated list, Open question, Weekly changelog).
