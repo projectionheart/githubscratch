@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Architecture Lineage: What Each Model Brings, and When to Use It</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f3ee; --panel:#fffdf9; --ink:#1d1f24; --muted:#6a6f78; --line:#e3ddd3;
+  --blue:#2f4f86; --blue-soft:#e6ecf6; --red:#a3402f; --red-soft:#f6e6e1;
+  --green:#2f6b4f; --amber:#9a6a12; --amber-soft:#f6ecd6; --grey-soft:#ececec;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+header{padding:32px 20px 12px;max-width:1100px;margin:0 auto}
+h1{font-family:Fraunces,serif;font-weight:800;font-size:clamp(26px,5vw,40px);line-height:1.1;margin:0 0 8px}
+.sub{color:var(--muted);max-width:720px;margin:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.lg-t::before{background:var(--blue)} .lg-m::before{background:var(--red)}
+main{max-width:1100px;margin:0 auto;padding:0 20px 60px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{font-family:Fraunces,serif;font-size:20px;margin:28px 0 10px}
+.picker{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font:500 13px Inter;cursor:pointer;color:var(--ink)}
+.chip:hover{border-color:#bdb4a5}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#rec{margin-top:14px;display:none}
+#rec h3{margin:0 0 6px;font-size:15px}
+#rec ol{margin:6px 0 0;padding-left:20px}
+#rec li{margin:6px 0}
+#rec a{color:var(--red);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+input[type=search]{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:14px Inter;background:#fff}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:8px 12px;font:500 13px Inter;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--ink);color:#fff}
+.timeline{position:relative}
+.year{font-family:JetBrains Mono,monospace;font-size:13px;color:var(--muted);margin:22px 0 8px;display:flex;align-items:center;gap:10px}
+.year::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:14px 14px 12px;cursor:pointer;transition:transform .12s, box-shadow .12s}
+.card.model{border-left-color:var(--red)}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.card.dim{opacity:.28}
+.card.hl{box-shadow:0 0 0 2px var(--ink)}
+.card .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card h4{margin:0;font-size:16px;font-weight:600}
+.date{font:500 12px JetBrains Mono,monospace;color:var(--muted);white-space:nowrap}
+.org{font-size:12.5px;color:var(--muted);margin-top:1px}
+.aff{margin:8px 0 10px;font-size:14px}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--grey-soft);color:#444}
+.st-now{background:#e1efe7;color:var(--green)}
+.st-niche{background:var(--amber-soft);color:var(--amber)}
+.st-old{background:var(--grey-soft);color:#666}
+.st-tech{background:var(--blue-soft);color:var(--blue)}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(20,20,25,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(480px,100%);background:var(--panel);z-index:11;transform:translateX(100%);transition:transform .22s;overflow-y:auto;padding:22px 22px 40px;border-left:1px solid var(--line)}
+.drawer.open{transform:none}
+.drawer .close{position:absolute;top:14px;right:14px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font:500 13px Inter}
+.drawer h3{font-family:Fraunces,serif;font-size:26px;margin:4px 0 2px;padding-right:60px}
+.kind{font:600 11px Inter;letter-spacing:.08em;text-transform:uppercase}
+.kind.t{color:var(--blue)} .kind.m{color:var(--red)}
+.sec{margin-top:18px}
+.sec h5{margin:0 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec p{margin:0}
+.use{background:#f1f6f2;border:1px solid #d4e5da;border-radius:10px;padding:12px}
+.links{display:flex;flex-wrap:wrap;gap:6px}
+.links button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font:500 13px Inter;cursor:pointer}
+.links button.m{color:var(--red)} .links button.t{color:var(--blue)}
+.links button small{color:var(--muted);font-weight:400}
+.specs{font:13px JetBrains Mono,monospace;color:#444;background:#f7f4ef;border-radius:8px;padding:10px;white-space:pre-wrap}
+footer{max-width:1100px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:12.5px}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<header>
+  <h1>Who borrowed what: LLM architectures, 2023–2026</h1>
+  <p class="sub">Every model and technique from Sebastian Raschka's lineage chart, with what each one does differently and whether you'd actually reach for it today (November 2026). Tap any card for details and lineage.</p>
+  <div class="legend"><span class="lg-t">Technique or influential model</span><span class="lg-m">Model that adopted it</span></div>
+</header>
+<main>
+  <h2>What do you need?</h2>
+  <div class="box">
+    <div class="picker" id="picker"></div>
+    <div id="rec"></div>
+  </div>
+
+  <h2>The lineage</h2>
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search: MLA, sliding window, Moonshot…">
+    <div class="seg" id="kindSeg">
+      <button data-k="all" class="on">All</button><button data-k="t">Techniques</button><button data-k="m">Models</button>
+    </div>
+    <div class="seg" id="statSeg">
+      <button data-s="all" class="on">Any status</button><button data-s="now">Use today</button>
+    </div>
+  </div>
+  <div class="timeline" id="timeline"></div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+
+<footer>
+  Chart and architecture details: Sebastian Raschka, <a href="https://sebastianraschka.com/llm-architecture-gallery/" target="_blank" rel="noopener">LLM Architecture Gallery</a>. Specs for 2026 releases are from vendor model cards and launch coverage. "When to use" is an editorial judgment as of Nov 21, 2026, and this field moves fast. Check current versions before you commit.
+</footer>
+
+<script>
+// status: now = a good pick today; niche = useful for specific cases; old = historical / superseded; tech = technique
+const D = [
+{id:"llama",n:"LLaMA",k:"t",org:"Meta",d:"2023-02-24",cat:"Base recipe",st:"old",
+ aff:"Set the modern decoder recipe: RoPE positions, RMSNorm and SwiGLU feed-forward.",
+ det:"The original LLaMA showed that a well-trained, openly released decoder could compete with much larger closed models. Its three ingredients are rotary position embeddings (RoPE), RMSNorm instead of LayerNorm, and SwiGLU activations in the MLP. Almost every model on this page still uses some version of all three.",
+ use:"Don't deploy it. Superseded on every axis. Read the code if you're learning how a decoder works, because it's the cleanest reference for the baseline everyone else modifies."},
+{id:"gqa",n:"Grouped-query attention (GQA)",k:"t",org:"Google",d:"2023-05-22",cat:"Attention",st:"tech",
+ aff:"Several query heads share one key/value head, which shrinks the KV cache several-fold at almost no quality cost.",
+ det:"Standard multi-head attention stores a key and value per head per token. GQA groups query heads so each group reads the same K/V, cutting cache memory and bandwidth. It sits between multi-head attention (one KV per query) and multi-query attention (one KV for all).",
+ use:"It's the default. If you're building or picking a dense model to serve, it should have GQA (or MLA). The 2026 trend is more aggressive grouping, like MiniMax's 64 query heads on 4 KV heads."},
+{id:"dsllm",n:"DeepSeek LLM 67B",k:"m",org:"DeepSeek",d:"2023-11-29",cat:"Dense",st:"old",from:["llama","gqa"],
+ aff:"A LLaMA-style decoder with 64 query heads and 8 KV heads. DeepSeek's first big open release.",
+ det:"An architecturally conservative model: LLaMA's decoder plus GQA. Its significance is historical. It's where DeepSeek started before it began inventing its own components (fine-grained MoE, MLA, DSA).",
+ use:"Historical only. Use a current DeepSeek release (the V4.x line) instead."},
+{id:"dsmoe",n:"DeepSeekMoE 16B",k:"m",org:"DeepSeek",d:"2024-01-11",cat:"MoE",st:"old",
+ aff:"Fine-grained experts: many small routed experts plus always-on shared experts.",
+ det:"Instead of a few large experts, DeepSeekMoE splits capacity into many small ones so routing can combine them more flexibly, and keeps 'shared' experts that every token passes through to hold common knowledge. This is now the standard MoE shape.",
+ use:"Historical. The idea lives on in essentially every large open MoE (Kimi K3 runs 896 routed experts plus 2 shared ones)."},
+{id:"mtp",n:"Multi-token prediction (MTP)",k:"t",org:"Meta FAIR",d:"2024-04-30",cat:"Training objective",st:"tech",
+ aff:"Extra heads predict several future tokens at once. That gives a denser training signal and free draft tokens for speculative decoding.",
+ det:"During training, auxiliary heads predict tokens t+2, t+3… alongside the usual next token. At inference the extra heads can be dropped, or kept as a built-in drafter for speculative decoding, which raises throughput without a separate draft model.",
+ use:"Prefer models trained with MTP when decode speed matters: the speculative-decoding heads come built in."},
+{id:"mla",n:"Multi-head latent attention (MLA)",k:"t",org:"DeepSeek (V2)",d:"2024-05-06",cat:"Attention",st:"tech",
+ aff:"Compresses keys and values into a small latent vector per token. The KV cache gets much smaller than GQA's while quality stays close to full multi-head attention.",
+ det:"Rather than storing per-head K and V, MLA caches one low-rank latent per token and up-projects it at attention time. It's more complex to implement than GQA but has become a favorite for long-context frontier MoEs. 2026 variants add an output gate ('Gated MLA') and drop RoPE (NoPE) in some layers.",
+ use:"Choose MLA-based models when you're serving long contexts at scale and KV-cache memory is the bottleneck."},
+{id:"mamba2",n:"Mamba-2",k:"t",org:"Tri Dao & Albert Gu",d:"2024-05-31",cat:"Linear / state-space",st:"tech",
+ aff:"A structured state-space layer: a fixed-size recurrent state instead of a growing KV cache, with linear-time cost in sequence length.",
+ det:"Mamba-2 reframed selective state-space models as a form of structured attention ('state space duality'), which made them much faster to train on GPUs. Pure SSMs lag on precise recall, so they mostly appear today as layers inside hybrids that keep some full attention.",
+ use:"Not a model to pick directly. Look for it inside hybrid models (e.g. NVIDIA's Nemotron line) when you want cheap long-sequence processing."},
+{id:"bias",n:"Expert routing bias",k:"t",org:"DeepSeek & Peking U.",d:"2024-08-28",cat:"MoE",st:"tech",
+ aff:"Balances load across experts by nudging a per-expert bias, with no auxiliary loss pulling against the language-modeling objective.",
+ det:"MoE routers tend to collapse onto a few experts. The classic fix is an auxiliary balancing loss, which can hurt quality. This method adds a bias to each expert's routing score and adjusts it up or down based on recent load. The bias affects only which experts are selected, not the output weights.",
+ use:"A training technique. It matters to you if you're pretraining an MoE, where it's now a sensible default."},
+{id:"olmoe",n:"OLMoE",k:"m",org:"Ai2 & Contextual AI",d:"2024-09-03",cat:"MoE",st:"niche",from:["dsmoe"],
+ aff:"A small, fully open MoE (8 of 64 experts active) with released data, code, logs and checkpoints.",
+ det:"OLMoE's value is transparency rather than raw capability. You can inspect exactly how routing and specialization develop during training.",
+ use:"Use it for teaching and research on MoE behavior at small scale. Skip it for production."},
+{id:"gdn",n:"Gated DeltaNet",k:"t",org:"MIT & NVIDIA",d:"2024-12-09",cat:"Linear / state-space",st:"tech",
+ aff:"Linear attention that updates a fixed memory with the delta rule (overwrite what's wrong) plus a forget gate (decay what's stale).",
+ det:"Plain linear attention just keeps adding associations to its state until it saturates. DeltaNet does targeted correction, and Gated DeltaNet adds a scalar decay so old information can fade. It's the linear layer behind Qwen3-Next and the ancestor of Moonshot's KDA.",
+ use:"A layer type, not a model. Its descendants power today's most efficient long-context hybrids."},
+{id:"dsv3",n:"DeepSeek-V3",k:"m",org:"DeepSeek",d:"2024-12-26",cat:"MoE",st:"old",from:["mla","bias","mtp"],
+ aff:"Put MLA, auxiliary-loss-free routing bias and MTP together in one 671B MoE trained cheaply.",
+ det:"The reference design that much of 2025–2026 copied. Several later models on this chart borrow its components directly.",
+ use:"Superseded by newer DeepSeek releases (V4.x). Still worth studying, since it's the template for most open frontier MoEs."},
+{id:"gemma3",n:"Gemma 3 27B",k:"m",org:"Google",d:"2025-03-12",cat:"Dense",st:"old",
+ aff:"Five sliding-window (local) layers per global layer, which cuts KV cache for long contexts on modest hardware.",
+ det:"Local layers attend only to a short window, so their cache stays small. Every sixth layer sees the whole context. That let a 27B dense model handle long inputs on a single accelerator.",
+ use:"Google has since shipped Gemma 4, so prefer that generation for single-GPU or on-device work. The local:global pattern itself is now everywhere."},
+{id:"qwen3",n:"Qwen3-8B-Base",k:"m",org:"Alibaba Qwen",d:"2025-04-29",cat:"Dense",st:"niche",from:["gqa"],
+ aff:"A plain, well-trained dense base: 32 query heads sharing 8 KV heads.",
+ det:"Nothing exotic, which is exactly why it became a go-to fine-tuning base. It's supported by every training and serving tool.",
+ use:"Still a dependable small fine-tuning base with mature tooling everywhere. Newer Qwen3.5 bases are generally stronger at similar size, so check those first."},
+{id:"k2",n:"Kimi K2",k:"m",org:"Moonshot AI",d:"2025-07-11",cat:"MoE",st:"old",from:["mla"],
+ aff:"A 1T-parameter MoE that adopted DeepSeek's MLA. A strong open agentic and coding model in its time.",
+ det:"Architecturally close to DeepSeek-V3, scaled up, with more experts and fewer attention heads.",
+ use:"Superseded by Kimi K3, and Moonshot has retired the older K2.5 API models. Use K3."},
+{id:"gptoss",n:"gpt-oss-120b",k:"m",org:"OpenAI",d:"2025-08-05",cat:"MoE",st:"now",
+ aff:"Alternates 128-token sliding windows with full attention, plus learned 'attention sinks' that give attention somewhere harmless to park.",
+ det:"Sinks are learned logits that let a head attend to 'nothing', which stabilizes very short sliding windows. It ships with MXFP4 weights and fits on a single 80GB GPU, under Apache 2.0.",
+ use:"Use it for a permissively licensed, US-origin open model that runs on one big GPU, for on-prem reasoning and tool use. It's no longer the most capable open model, but it's the easiest to deploy."},
+{id:"qnext",n:"Qwen3-Next",k:"m",org:"Alibaba Qwen",d:"2025-09-11",cat:"Hybrid",st:"niche",from:["gdn"],
+ aff:"36 Gated DeltaNet layers and 12 gated full-attention layers (3:1), plus an output gate on attention. Very cheap long contexts.",
+ det:"An early mainstream proof that a 3:1 linear-to-full hybrid can match full attention. The sigmoid gate on the attention output is now borrowed by others (Arcee's Trinity).",
+ use:"Use it for long-document work on limited hardware, where its tiny fixed state wins. For top quality, newer Qwen generations have moved on."},
+{id:"dsa",n:"DeepSeek Sparse Attention (DSA)",k:"t",org:"DeepSeek (V3.2-Exp)",d:"2025-09-29",cat:"Attention",st:"tech",
+ aff:"A lightweight 'indexer' scores past tokens and each query attends only to the top-k, so long-context cost stops growing quadratically.",
+ det:"Unlike sliding windows, DSA picks relevant tokens from anywhere in the context, so it keeps long-range recall while skipping most of the work.",
+ use:"Look for it when processing very long contexts cheaply matters (GLM-5 adopted it)."},
+{id:"klinear",n:"Kimi Linear",k:"m",org:"Moonshot AI",d:"2025-10-30",cat:"Hybrid",st:"niche",from:["gdn"],
+ aff:"Introduced Kimi Delta Attention (KDA): Gated DeltaNet with per-channel forget gates instead of one scalar.",
+ det:"Moonshot's proof-of-concept for the architecture that became Kimi K3. KDA lets each feature channel decay at its own rate, which is finer control over what the fixed-size memory keeps.",
+ use:"Mainly useful for research. It's small enough to experiment with KDA directly. For real work, use K3."},
+{id:"mimo",n:"MiMo-V2-Flash",k:"m",org:"Xiaomi",d:"2025-12-16",cat:"MoE",st:"niche",from:["gptoss"],
+ aff:"Borrows gpt-oss's recipe of 128-token windows with learned sinks, tuned for fast inference.",
+ det:"Pushes the sliding-window ratio further for speed. A good example of sinks spreading beyond OpenAI.",
+ use:"It's an option for fast, cheap agentic inference. Benchmark it against newer Flash-class models first."},
+{id:"latentmoe",n:"LatentMoE",k:"t",org:"NVIDIA",d:"2025-12-24",cat:"MoE",st:"tech",
+ aff:"Runs experts in a compressed latent space instead of the full hidden size, so you can afford more experts for the same compute and communication.",
+ det:"Tokens are projected down before routing to experts and back up afterwards. That cuts the all-to-all traffic that bottlenecks big MoE training and inference. Kimi K3 ('Stable LatentMoE') and Marin Mochi both adopt it.",
+ use:"A design choice. It matters when picking or building very sparse MoEs for multi-GPU serving."},
+{id:"trinity",n:"Trinity Large Base",k:"m",org:"Arcee",d:"2026-01-27",cat:"MoE",st:"niche",from:["qnext"],
+ aff:"Adopts Qwen's gated attention output in a US-built open base model.",
+ det:"The output gate lets each head scale down its contribution, which reduces attention-sink pathologies and training instability.",
+ use:"Use it if you need an open base model from a US lab to fine-tune yourself."},
+{id:"glm5",n:"GLM-5",k:"m",org:"Z.ai",d:"2026-02-11",cat:"MoE",st:"old",from:["dsa"],
+ aff:"Uses DeepSeek Sparse Attention for efficient long contexts.",
+ det:"An early adopter of DSA outside DeepSeek.",
+ use:"Z.ai has since shipped GLM-5.2 and 5.3. Use the latest GLM for strong open coding and agent work."},
+{id:"quant",n:"Quantile balancing",k:"t",org:"Jianlin Su",d:"2026-02-22",cat:"MoE",st:"tech",
+ aff:"Balances experts by routing on score quantiles (where a token ranks) instead of raw scores or a tuned bias.",
+ det:"Each expert accepts tokens based on where they fall in its score distribution, which gives even load more directly than bias tuning. Kimi K3 and Marin Mochi both use it.",
+ use:"A training technique. Consider it if you pretrain large, very sparse MoEs."},
+{id:"nemo3",n:"Nemotron 3 Super",k:"m",org:"NVIDIA",d:"2026-03-11",cat:"Hybrid",st:"now",from:["bias","dsv3"],
+ aff:"Combines expert routing bias with MTP heads whose weights are shared, so you get cheaper built-in speculative decoding.",
+ det:"Part of NVIDIA's open Nemotron 3 family, which mixes state-space and attention layers in an MoE. It's built to run efficiently on NVIDIA hardware.",
+ use:"Use it for high-throughput agents on NVIDIA GPUs, especially with NVIDIA's NeMo and TensorRT tooling, or if you want an open model with open training data."},
+{id:"attnres",n:"Block attention residuals",k:"t",org:"Moonshot AI",d:"2026-03-16",cat:"Residuals",st:"tech",
+ aff:"Replaces 'add every layer's output' residuals with learned attention over earlier blocks' outputs.",
+ det:"Standard residuals sum all layer outputs with weight 1, so hidden states grow and early information gets diluted. AttnRes lets each block softmax-weight earlier block outputs. The 'block' version groups layers so the cost stays small.",
+ use:"An architecture choice. It's now in Kimi K3 and Inkling 2."},
+{id:"instella",n:"Instella-MoE",k:"m",org:"AMD",d:"2026-07-24",cat:"MoE",st:"niche",from:["mla"],
+ aff:"Gated MLA in a small 16B-total / 2.8B-active MoE, trained end to end on AMD Instinct GPUs with every checkpoint released.",
+ det:"AMD publishes weights from every stage (pretrain, mid-train, 64K long-context, SFT, DPO, RL 'Think') plus data mixtures, configs and code.",
+ use:"Use it for reproducible MoE research, and especially for ROCm/AMD training pipelines. It's not a frontier assistant."},
+{id:"k3",n:"Kimi K3",k:"m",org:"Moonshot AI",d:"2026-07-27",cat:"Hybrid",st:"now",from:["klinear","latentmoe","attnres","quant","mla"],
+ aff:"A 3:1 hybrid of KDA linear attention (69 layers) and Gated MLA (24 layers). 2.8T total / 104B active, 1M-token context.",
+ det:"Combines nearly every recent idea: KDA, Gated MLA with NoPE, block attention residuals, Stable LatentMoE with 896 routed experts (16 active, 2 shared), quantile balancing, and MXFP4 weights. It's natively multimodal. Weights shipped July 27 under the Kimi K3 License.",
+ use:"The strongest open-weights option for long-horizon agentic coding and million-token contexts. Self-hosting needs roughly 1.4 TB of memory, so most people will use the API.",
+ specs:"2.8T total · 104B active\n93 layers: 69 KDA + 24 Gated MLA\n896 experts, top-16 + 2 shared\n1M context · vision\nMXFP4 weights / MXFP8 activations"},
+{id:"muse",n:"Muse Spark Open",k:"m",org:"Meta",d:"2026-10-15",cat:"MoE",st:"now",
+ aff:"Uses RoPE only in local (sliding-window) layers. Global layers carry no positional encoding, which helps long-context extrapolation.",
+ det:"The open-weights version of Meta's Muse Spark, with extra safety post-training for standalone use. 816B total / 42B active, 1M context, multimodal input. It runs on two M5 Ultra Mac Studios via MLX. The Muse Model License has limited commercial terms and requires 'Built with Muse Spark Open' attribution.",
+ use:"Use it for a top US open-weights coding model, or for local frontier-class inference on Apple silicon. Read the license before shipping commercially.",
+ specs:"816B total · 42B active\n1M context\nBF16 + NVFP4 weights\nMuse Model License"},
+{id:"minimax",n:"MiniMax M3.1-Flash",k:"m",org:"MiniMax",d:"2026-10-23",cat:"MoE",st:"now",
+ aff:"Extreme KV sharing: 64 query heads share just 4 KV heads, which keeps cache tiny and decoding cheap.",
+ det:"428B total / ~23B active multimodal MoE for coding, computer use and agentic office work. It ran anonymously as 'Space Bunny' on OpenRouter before launch. API pricing is $0.15 / $0.60 per million input/output tokens. A Pro version is promised.",
+ use:"Use it for cheap, high-volume agent and coding API calls. Wait for independent benchmarks on hard terminal-style tasks, where MiniMax's own numbers show it trailing.",
+ specs:"428B total · ~23B active\n64 Q heads : 4 KV heads\n1M context\n$0.15 in / $0.60 out per 1M tokens"},
+{id:"inkling",n:"Inkling 2 Small",k:"m",org:"Thinking Machines Lab",d:"2026-11-12",cat:"MoE",st:"now",from:["attnres"],
+ aff:"Applies attention residuals across eight 6-layer blocks, adds short convolutions, and uses learned relative position bias instead of RoPE.",
+ det:"594B total / 17B active (8 of 384 experts), multimodal, 1M context, with a 5:1 sliding-window to global gated GQA pattern. Only about 2.9% of parameters are active per token, so it's very cheap to run for its size. Apache 2.0.",
+ use:"Use it when you want frontier-ish capability with very low active compute under a truly permissive license. It's a strong default for commercial self-hosting on a multi-GPU node.",
+ specs:"594B total · 17B active\n48 layers: 40 SWA + 8 global\n384 experts, top-8\n1M context · Apache 2.0"},
+{id:"marin",n:"Marin Mochi",k:"m",org:"Open Athena / Marin",d:"2026-11-17",cat:"MoE",st:"niche",from:["quant","latentmoe"],
+ aff:"Bins router scores into quantiles for balancing. Latent MoE with gated GQA, where every fourth layer is global and the rest use 2,048-token windows.",
+ det:"The most open large model yet: data mixture, configs, live training logs and 57 checkpoints across 18.2T tokens. These are base models only, with no chat or instruct tuning.",
+ use:"Use it for research, for studying training dynamics, or as a fully transparent base to post-train yourself. It isn't an assistant out of the box.",
+ specs:"535B total · ~23B active\n18.2T training tokens\n57 base checkpoints\nNo post-training"}
+];
+
+const byId = Object.fromEntries(D.map(x=>[x.id,x]));
+D.forEach(x=>x.to=[]); D.forEach(x=>(x.from||[]).forEach(f=>byId[f]&&byId[f].to.push(x.id)));
+
+const NEEDS = [
+ {l:"Best open model for agentic coding", ids:["k3","muse","inkling"], why:"The largest and most capable open-weight releases, all with 1M contexts."},
+ {l:"Cheapest API for agents", ids:["minimax","nemo3","mimo"], why:"Low price and high throughput, built for volume."},
+ {l:"Permissive license for a commercial product", ids:["inkling","gptoss"], why:"Both are Apache 2.0. Muse Spark Open and Kimi K3 have custom licenses with conditions."},
+ {l:"Run on my own hardware", ids:["gptoss","muse","qwen3"], why:"gpt-oss-120b fits one 80GB GPU. Muse Spark Open runs on two Mac Studios. Small dense bases run almost anywhere."},
+ {l:"Million-token contexts", ids:["k3","inkling","muse","minimax"], why:"Hybrid linear attention (K3) and heavy sliding-window ratios keep the cache manageable."},
+ {l:"Fully open, for research", ids:["marin","instella","olmoe"], why:"Data, code and intermediate checkpoints are all released."},
+ {l:"Base model to fine-tune", ids:["qwen3","trinity","marin"], why:"Clean base checkpoints with no assistant tuning baked in."},
+ {l:"Understand the core ideas", ids:["gqa","mla","gdn","dsa","attnres"], why:"The five techniques that explain most of the chart."}
+];
+
+const stLabel={now:["Use today","st-now"],niche:["Specific uses","st-niche"],old:["Superseded","st-old"],tech:["Technique","st-tech"]};
+const fmt = d=>new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
+
+let kind="all", stat="all", q="", hl=null;
+
+function render(){
+  const tl=document.getElementById("timeline"); tl.innerHTML="";
+  const years=[...new Set(D.map(x=>x.d.slice(0,4)))];
+  years.forEach(y=>{
+    const items=D.filter(x=>x.d.startsWith(y)).filter(x=>{
+      if(kind!=="all"&&x.k!==kind) return false;
+      if(stat==="now"&&x.st!=="now") return false;
+      if(q){const s=(x.n+x.org+x.aff+x.det+x.cat).toLowerCase(); if(!s.includes(q)) return false;}
+      return true;});
+    if(!items.length) return;
+    const h=document.createElement("div"); h.className="year"; h.textContent=y; tl.appendChild(h);
+    const g=document.createElement("div"); g.className="grid";
+    items.forEach(x=>{
+      const c=document.createElement("div");
+      c.className="card"+(x.k==="m"?" model":"")+(hl?(hl.includes(x.id)?" hl":" dim"):"");
+      c.id="c-"+x.id;
+      const [sl,sc]=stLabel[x.st];
+      c.innerHTML=`<div class="top"><h4>${x.n}</h4><span class="date">${fmt(x.d)}</span></div>
+        <div class="org">${x.org}</div><p class="aff">${x.aff}</p>
+        <div class="tags"><span class="tag ${sc}">${sl}</span><span class="tag">${x.cat}</span></div>`;
+      c.onclick=()=>openD(x.id);
+      g.appendChild(c);
+    });
+    tl.appendChild(g);
+  });
+  if(!tl.children.length) tl.innerHTML='<p style="color:var(--muted)">Nothing matches that search.</p>';
+}
+
+function linkBtns(ids){
+  return ids.map(i=>{const t=byId[i];return `<button class="${t.k}" data-go="${i}">${t.n} <small>${fmt(t.d)}${t.d.slice(2,4)!==""?" ’"+t.d.slice(2,4):""}</small></button>`}).join("");
+}
+function openD(id){
+  const x=byId[id], dr=document.getElementById("drawer");
+  const [sl,sc]=stLabel[x.st];
+  dr.innerHTML=`<button class="close" id="cls">Close</button>
+   <div class="kind ${x.k}">${x.k==="t"?"Technique":"Model"} · ${x.cat}</div>
+   <h3>${x.n}</h3><div class="org">${x.org} · ${new Date(x.d+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+   <div class="sec"><h5>What's distinctive</h5><p>${x.aff}</p></div>
+   <div class="sec"><h5>How it works</h5><p>${x.det}</p></div>
+   ${x.specs?`<div class="sec"><h5>Specs</h5><div class="specs">${x.specs}</div></div>`:""}
+   <div class="sec"><h5>When to use it today <span class="tag ${sc}" style="margin-left:6px;text-transform:none;letter-spacing:0">${sl}</span></h5><div class="use">${x.use}</div></div>
+   ${x.from&&x.from.length?`<div class="sec"><h5>Borrows from</h5><div class="links">${linkBtns(x.from)}</div></div>`:""}
+   ${x.to.length?`<div class="sec"><h5>Adopted by</h5><div class="links">${linkBtns(x.to)}</div></div>`:""}`;
+  dr.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>openD(b.dataset.go));
+  document.getElementById("cls").onclick=closeD;
+  dr.classList.add("open"); dr.scrollTop=0; dr.setAttribute("aria-hidden","false");
+  document.getElementById("scrim").classList.add("open");
+}
+function closeD(){document.getElementById("drawer").classList.remove("open");document.getElementById("scrim").classList.remove("open");document.getElementById("drawer").setAttribute("aria-hidden","true")}
+document.getElementById("scrim").onclick=closeD;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeD()});
+
+// picker
+const pk=document.getElementById("picker"), rec=document.getElementById("rec");
+NEEDS.forEach((n,i)=>{
+  const b=document.createElement("button"); b.className="chip"; b.textContent=n.l;
+  b.onclick=()=>{
+    const on=b.classList.contains("on");
+    pk.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+    if(on){hl=null;rec.style.display="none";render();return;}
+    b.classList.add("on"); hl=n.ids;
+    rec.style.display="block";
+    rec.innerHTML=`<h3>${n.why}</h3><ol>${n.ids.map(i=>`<li><a data-go="${i}">${byId[i].n}</a>: ${byId[i].use}</li>`).join("")}</ol>`;
+    rec.querySelectorAll("[data-go]").forEach(a=>a.onclick=()=>openD(a.dataset.go));
+    kind="all";stat="all";q="";document.getElementById("q").value="";
+    document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x.dataset.k==="all"));
+    document.querySelectorAll("#statSeg button").forEach(x=>x.classList.toggle("on",x.dataset.s==="all"));
+    render();
+  };
+  pk.appendChild(b);
+});
+
+document.getElementById("q").oninput=e=>{q=e.target.value.trim().toLowerCase();render()};
+document.querySelectorAll("#kindSeg button").forEach(b=>b.onclick=()=>{kind=b.dataset.k;document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x===b));render()});
+document.querySelectorAll("#statSeg button").forEach(b=>b.onclick=()=>{stat=b.dataset.s;document.querySelectorAll("#statSeg button").forEach(x=>x.classList.toggle("on",x===b));render()});
+render();
+</script>
+</body>
+</html>
